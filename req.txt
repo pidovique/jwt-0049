@@ -1,0 +1,19 @@
+
+# Framework
+Flask==3.0.0
+
+# BDD
+
+Flask-SQLAlchemy==3.1.1
+
+# JWT
+
+PyJWT==2.8.0
+
+
+# hash
+
+Werkzeug==3.0.1
+
+
+

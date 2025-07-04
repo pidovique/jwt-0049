@@ -1,0 +1,202 @@
+{% extends "base.html" %}
+
+{% block title %}Registro - Sistema JWT{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6 col-lg-5">
+        <div class="card shadow">
+            <div class="card-header text-center">
+                <h4><i class="bi bi-person-plus"></i> Crear Cuenta</h4>
+                <p class="mb-0 small">Regístrate en el sistema</p>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="mb-3">
+                        <label for="username" class="form-label">
+                            <i class="bi bi-person"></i> Nombre de Usuario
+                        </label>
+                        <input type="text" 
+                               class="form-control" 
+                               id="username" 
+                               name="username" 
+                               required 
+                               minlength="3"
+                               placeholder="Ej: juan_perez">
+                        <div class="form-text">Mínimo 3 caracteres</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="password" class="form-label">
+                            <i class="bi bi-lock"></i> Contraseña
+                        </label>
+                        <input type="password" 
+                               class="form-control" 
+                               id="password" 
+                               name="password" 
+                               required 
+                               minlength="6"
+                               placeholder="Mínimo 6 caracteres">
+                        <div class="form-text">La contraseña será hasheada automáticamente</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="rol" class="form-label">
+                            <i class="bi bi-shield-check"></i> Rol de Usuario
+                        </label>
+                        <select class="form-select" id="rol" name="rol" required>
+                            <option value="">Selecciona un rol...</option>
+                            <option value="Usuario Común">👤 Usuario Común - Solo lectura</option>
+                            <option value="Editor">✏️ Editor - Crear y editar</option>
+                            <option value="Administrador">👑 Administrador - Acceso total</option>
+                        </select>
+                        <div class="form-text">Define los permisos del usuario</div>
+                    </div>
+                    
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-custom">
+                            <i class="bi bi-check-circle"></i> Crear Cuenta
+                        </button>
+                    </div>
+                </form>
+                
+                <hr>
+                
+                <div class="text-center">
+                    <p class="mb-0">¿Ya tienes cuenta?</p>
+                    <a href="{{ url_for('login') }}" class="btn btn-outline-secondary">
+                        <i class="bi bi-box-arrow-in-right"></i> Iniciar Sesión
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Explicación de roles para la presentación -->
+<div class="row mt-5">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="bi bi-info-circle"></i> Sistema de Roles - Explicación para Clase</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="card h-100 border-danger">
+                            <div class="card-header bg-danger text-white text-center">
+                                <h6><i class="bi bi-crown"></i> Administrador</h6>
+                            </div>
+                            <div class="card-body">
+                                <h6>Permisos:</h6>
+                                <ul class="small">
+                                    <li>✅ Ver todos los proyectos</li>
+                                    <li>✅ Crear proyectos</li>
+                                    <li>✅ Editar proyectos</li>
+                                    <li>✅ <strong>Eliminar proyectos</strong></li>
+                                    <li>✅ Gestionar todas las tareas</li>
+                                    <li>✅ <strong>Eliminar tareas</strong></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-4">
+                        <div class="card h-100 border-warning">
+                            <div class="card-header bg-warning text-dark text-center">
+                                <h6><i class="bi bi-pencil"></i> Editor</h6>
+                            </div>
+                            <div class="card-body">
+                                <h6>Permisos:</h6>
+                                <ul class="small">
+                                    <li>✅ Ver proyectos asignados</li>
+                                    <li>✅ Crear proyectos</li>
+                                    <li>✅ Editar proyectos</li>
+                                    <li>❌ <strong>No puede eliminar</strong></li>
+                                    <li>✅ Crear tareas</li>
+                                    <li>✅ Editar tareas asignadas</li>
+                                    <li>❌ <strong>No puede eliminar tareas</strong></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-4">
+                        <div class="card h-100 border-info">
+                            <div class="card-header bg-info text-white text-center">
+                                <h6><i class="bi bi-eye"></i> Usuario Común</h6>
+                            </div>
+                            <div class="card-body">
+                                <h6>Permisos:</h6>
+                                <ul class="small">
+                                    <li>✅ Ver proyectos asignados</li>
+                                    <li>❌ No puede crear</li>
+                                    <li>❌ No puede editar</li>
+                                    <li>❌ No puede eliminar</li>
+                                    <li>✅ Ver tareas asignadas</li>
+                                    <li>✅ Marcar tareas como completadas</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="alert alert-success mt-4">
+                    <i class="bi bi-shield-lock"></i>
+                    <strong>Control de Acceso:</strong> El sistema usa decoradores Python para verificar 
+                    tanto la autenticación (JWT válido) como la autorización (rol apropiado) antes de 
+                    permitir acceso a las funcionalidades.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Validación en tiempo real para la presentación
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.querySelector('form');
+    const username = document.getElementById('username');
+    const password = document.getElementById('password');
+    const rol = document.getElementById('rol');
+    
+    // Validación de usuario en tiempo real
+    username.addEventListener('input', function() {
+        if (this.value.length >= 3) {
+            this.classList.remove('is-invalid');
+            this.classList.add('is-valid');
+        } else {
+            this.classList.remove('is-valid');
+            this.classList.add('is-invalid');
+        }
+    });
+    
+    // Validación de contraseña
+    password.addEventListener('input', function() {
+        if (this.value.length >= 6) {
+            this.classList.remove('is-invalid');
+            this.classList.add('is-valid');
+        } else {
+            this.classList.remove('is-valid');
+            this.classList.add('is-invalid');
+        }
+    });
+    
+    // Destacar rol seleccionado
+    rol.addEventListener('change', function() {
+        const cards = document.querySelectorAll('.card.border-danger, .card.border-warning, .card.border-info');
+        cards.forEach(card => card.classList.remove('shadow'));
+        
+        if (this.value === 'Administrador') {
+            document.querySelector('.card.border-danger').classList.add('shadow');
+        } else if (this.value === 'Editor') {
+            document.querySelector('.card.border-warning').classList.add('shadow');
+        } else if (this.value === 'Usuario Común') {
+            document.querySelector('.card.border-info').classList.add('shadow');
+        }
+    });
+});
+</script>
+{% endblock %}

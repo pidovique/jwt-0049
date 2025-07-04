@@ -1,0 +1,145 @@
+{% extends "base.html" %}
+
+{% block title %}Iniciar Sesión - Sistema JWT{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6 col-lg-4">
+        <div class="card shadow">
+            <div class="card-header text-center">
+                <h4><i class="bi bi-box-arrow-in-right"></i> Iniciar Sesión</h4>
+                <p class="mb-0 small">Accede con tu cuenta JWT</p>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="mb-3">
+                        <label for="username" class="form-label">
+                            <i class="bi bi-person"></i> Usuario
+                        </label>
+                        <input type="text" 
+                               class="form-control" 
+                               id="username" 
+                               name="username" 
+                               required 
+                               placeholder="Ingresa tu usuario">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="password" class="form-label">
+                            <i class="bi bi-lock"></i> Contraseña
+                        </label>
+                        <input type="password" 
+                               class="form-control" 
+                               id="password" 
+                               name="password" 
+                               required 
+                               placeholder="Ingresa tu contraseña">
+                    </div>
+                    
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-custom">
+                            <i class="bi bi-check-circle"></i> Iniciar Sesión
+                        </button>
+                    </div>
+                </form>
+                
+                <hr>
+                
+                <div class="text-center">
+                    <p class="mb-0">¿No tienes cuenta?</p>
+                    <a href="{{ url_for('registro') }}" class="btn btn-outline-secondary">
+                        <i class="bi bi-person-plus"></i> Registrarse
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Información de usuarios de prueba -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h6><i class="bi bi-info-circle"></i> Usuarios de Prueba</h6>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-12 mb-2">
+                        <strong>Administrador</strong><br>
+                        <code>admin / admin123</code>
+                        <span class="badge bg-danger ms-2">Acceso Total</span>
+                    </div>
+                    <div class="col-12 mb-2">
+                        <strong>Editor</strong><br>
+                        <code>editor / editor123</code>
+                        <span class="badge bg-warning ms-2">Crear/Editar</span>
+                    </div>
+                    <div class="col-12 mb-2">
+                        <strong>Usuario Común</strong><br>
+                        <code>usuario / usuario123</code>
+                        <span class="badge bg-info ms-2">Solo Lectura</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Explicación técnica para la presentación -->
+<div class="row mt-5">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="bi bi-gear"></i> Proceso de Autenticación JWT - Explicación Técnica</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6><i class="bi bi-1-circle"></i> ¿Qué sucede al hacer login?</h6>
+                        <ol class="small">
+                            <li><strong>Verificación:</strong> Se valida usuario y contraseña hasheada</li>
+                            <li><strong>Generación JWT:</strong> Se crea token con datos del usuario</li>
+                            <li><strong>Almacenamiento:</strong> Token se guarda en la sesión del servidor</li>
+                            <li><strong>Redirección:</strong> Usuario es redirigido al dashboard</li>
+                        </ol>
+                    </div>
+                    <div class="col-md-6">
+                        <h6><i class="bi bi-2-circle"></i> Contenido del JWT</h6>
+                        <ul class="small">
+                            <li><strong>user_id:</strong> ID único del usuario</li>
+                            <li><strong>username:</strong> Nombre de usuario</li>
+                            <li><strong>rol:</strong> Tipo de usuario (Admin/Editor/Usuario)</li>
+                            <li><strong>exp:</strong> Tiempo de expiración (24 horas)</li>
+                            <li><strong>iat:</strong> Momento de emisión</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="alert alert-info mt-3">
+                    <i class="bi bi-lightbulb"></i>
+                    <strong>Seguridad:</strong> Las contraseñas se hashean con Werkzeug (similar a bcrypt) 
+                    y el JWT está firmado con una clave secreta para evitar manipulación.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Demostración interactiva para la clase
+document.addEventListener('DOMContentLoaded', function() {
+    // Agregar efecto visual al submit
+    const form = document.querySelector('form');
+    form.addEventListener('submit', function(e) {
+        const submitBtn = form.querySelector('button[type="submit"]');
+        submitBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> Verificando...';
+        submitBtn.disabled = true;
+        
+        // Simular procesamiento (en producción esto no sería necesario)
+        setTimeout(() => {
+            submitBtn.innerHTML = '<i class="bi bi-check-circle"></i> Iniciar Sesión';
+            submitBtn.disabled = false;
+        }, 1000);
+    });
+});
+</script>
+{% endblock %}

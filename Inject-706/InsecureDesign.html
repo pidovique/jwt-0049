@@ -1,0 +1,802 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Préstamos - Ejemplo Insecure Design</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+        
+        .header {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 30px;
+        }
+        
+        .vulnerable-section {
+            background: #ffebee;
+            border-left: 4px solid #f44336;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+        
+        .secure-section {
+            background: #e8f5e8;
+            border-left: 4px solid #4caf50;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+        
+        .code-block {
+            background: #263238;
+            color: #ffffff;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            margin: 10px 0;
+            overflow-x: auto;
+        }
+        
+        .comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 20px 0;
+        }
+        
+        .form-section {
+            background: #f9f9f9;
+            padding: 20px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        
+        .form-group {
+            margin: 15px 0;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        
+        input, select, textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+        
+        button {
+            background: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 5px;
+        }
+        
+        button:hover {
+            background: #0056b3;
+        }
+        
+        .danger-btn {
+            background: #dc3545;
+        }
+        
+        .danger-btn:hover {
+            background: #c82333;
+        }
+        
+        .alert {
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+        
+        .alert-danger {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .threat-analysis {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            padding: 20px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        
+        .tabs {
+            display: flex;
+            margin-bottom: 20px;
+        }
+        
+        .tab {
+            padding: 10px 20px;
+            background: #e9ecef;
+            border: 1px solid #dee2e6;
+            cursor: pointer;
+            margin-right: 2px;
+        }
+        
+        .tab.active {
+            background: #007bff;
+            color: white;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .vulnerability-list {
+            background: #fff;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            padding: 20px;
+            margin: 10px 0;
+        }
+        
+        .vulnerability-item {
+            padding: 10px;
+            margin: 5px 0;
+            border-left: 3px solid #f44336;
+            background: #ffebee;
+        }
+        
+        .mitigation-item {
+            padding: 10px;
+            margin: 5px 0;
+            border-left: 3px solid #4caf50;
+            background: #e8f5e8;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏦 Sistema de Préstamos Online</h1>
+            <h2>Ejemplo Práctico: A04 - Insecure Design</h2>
+        </div>
+        
+        <div class="tabs">
+            <div class="tab active" onclick="showTab('scenario')">Escenario</div>
+            <div class="tab" onclick="showTab('vulnerable')">Diseño Vulnerable</div>
+            <div class="tab" onclick="showTab('secure')">Diseño Seguro</div>
+            <div class="tab" onclick="showTab('analysis')">Análisis de Amenazas</div>
+        </div>
+        
+        <div id="scenario" class="tab-content active">
+            <h3>📋 Escenario del Sistema</h3>
+            <p><strong>Contexto:</strong> Una fintech desarrolla un sistema de préstamos online que permite a los usuarios solicitar préstamos personales de hasta $50,000 USD.</p>
+            
+            <h4>Requerimientos del Negocio:</h4>
+            <ul>
+                <li>Proceso de solicitud rápido (menos de 10 minutos)</li>
+                <li>Aprobación automática para montos menores a $5,000</li>
+                <li>Verificación de identidad básica</li>
+                <li>Evaluación crediticia simplificada</li>
+            </ul>
+            
+            <h4>Actores del Sistema:</h4>
+            <ul>
+                <li><strong>Solicitante:</strong> Usuario que solicita el préstamo</li>
+                <li><strong>Sistema de Evaluación:</strong> Algoritmo que aprueba/rechaza</li>
+                <li><strong>Operador:</strong> Personal que revisa casos especiales</li>
+                <li><strong>Administrador:</strong> Gestiona configuraciones del sistema</li>
+            </ul>
+        </div>
+        
+        <div id="vulnerable" class="tab-content">
+            <h3>🚨 Diseño Vulnerable</h3>
+            
+            <div class="vulnerable-section">
+                <h4>Formulario de Solicitud (Diseño Inseguro)</h4>
+                <div class="form-section">
+                    <div class="form-group">
+                        <label>Nombre Completo:</label>
+                        <input type="text" id="fullName" placeholder="Juan Pérez">
+                    </div>
+                    <div class="form-group">
+                        <label>Monto Solicitado:</label>
+                        <input type="number" id="amount" placeholder="5000" max="50000">
+                    </div>
+                    <div class="form-group">
+                        <label>Ingresos Mensuales:</label>
+                        <input type="number" id="income" placeholder="3000">
+                    </div>
+                    <div class="form-group">
+                        <label>¿Cuál es el nombre de tu primera mascota?</label>
+                        <input type="text" id="petName" placeholder="Para recuperación de cuenta">
+                    </div>
+                    <div class="form-group">
+                        <label>¿En qué ciudad naciste?</label>
+                        <input type="text" id="birthCity" placeholder="Para verificación de identidad">
+                    </div>
+                    <button onclick="submitVulnerableForm()">Solicitar Préstamo</button>
+                </div>
+            </div>
+            
+            <div class="vulnerability-list">
+                <h4>🔍 Vulnerabilidades Identificadas:</h4>
+                <div class="vulnerability-item">
+                    <strong>1. Preguntas de Seguridad Predecibles:</strong>
+                    <p>Usar preguntas como "nombre de mascota" o "ciudad natal" viola las recomendaciones de NIST 800-63b.</p>
+                </div>
+                <div class="vulnerability-item">
+                    <strong>2. Validación Solo en Frontend:</strong>
+                    <p>Los límites de monto solo se validan en el cliente, permitiendo manipulación.</p>
+                </div>
+                <div class="vulnerability-item">
+                    <strong>3. Falta de Verificación de Identidad:</strong>
+                    <p>No hay verificación real de la identidad del solicitante.</p>
+                </div>
+                <div class="vulnerability-item">
+                    <strong>4. Ausencia de Controles de Frecuencia:</strong>
+                    <p>No hay límites en el número de solicitudes por usuario/IP.</p>
+                </div>
+                <div class="vulnerability-item">
+                    <strong>5. Lógica de Negocio Débil:</strong>
+                    <p>Aprobación automática sin verificaciones cruzadas adecuadas.</p>
+                </div>
+            </div>
+        </div>
+        
+        <div id="secure" class="tab-content">
+            <h3>✅ Diseño Seguro</h3>
+            
+            <div class="secure-section">
+                <h4>Formulario de Solicitud (Diseño Seguro)</h4>
+                <div class="form-section">
+                    <div class="form-group">
+                        <label>Nombre Completo:</label>
+                        <input type="text" id="secureFullName" placeholder="Juan Pérez">
+                    </div>
+                    <div class="form-group">
+                        <label>Monto Solicitado:</label>
+                        <input type="number" id="secureAmount" placeholder="5000">
+                    </div>
+                    <div class="form-group">
+                        <label>Ingresos Mensuales:</label>
+                        <input type="number" id="secureIncome" placeholder="3000">
+                    </div>
+                    <div class="form-group">
+                        <label>Documento de Identidad:</label>
+                        <input type="file" id="idDocument" accept=".pdf,.jpg,.png">
+                    </div>
+                    <div class="form-group">
+                        <label>Comprobante de Ingresos:</label>
+                        <input type="file" id="incomeProof" accept=".pdf,.jpg,.png">
+                    </div>
+                    <button onclick="submitSecureForm()">Solicitar Préstamo</button>
+                </div>
+            </div>
+            
+            <div class="vulnerability-list">
+                <h4>🛡️ Controles de Seguridad Implementados:</h4>
+                <div class="mitigation-item">
+                    <strong>1. Autenticación Multifactor:</strong>
+                    <p>Verificación por SMS/email en lugar de preguntas de seguridad.</p>
+                </div>
+                <div class="mitigation-item">
+                    <strong>2. Validación en Múltiples Capas:</strong>
+                    <p>Validación en frontend, backend y base de datos.</p>
+                </div>
+                <div class="mitigation-item">
+                    <strong>3. Verificación de Identidad Real:</strong>
+                    <p>Carga de documentos oficiales con verificación automática.</p>
+                </div>
+                <div class="mitigation-item">
+                    <strong>4. Controles de Frecuencia:</strong>
+                    <p>Límites por usuario, IP y patrones de comportamiento.</p>
+                </div>
+                <div class="mitigation-item">
+                    <strong>5. Lógica de Negocio Robusta:</strong>
+                    <p>Múltiples verificaciones cruzadas y auditoría completa.</p>
+                </div>
+            </div>
+        </div>
+        
+        <div id="analysis" class="tab-content">
+            <h3>🔍 Análisis de Amenazas (Threat Modeling)</h3>
+            
+            <div class="threat-analysis">
+                <h4>🎯 Metodología: STRIDE</h4>
+                <div class="comparison">
+                    <div>
+                        <h5>Spoofing (Suplantación)</h5>
+                        <ul>
+                            <li>Identidad falsa del solicitante</li>
+                            <li>Reutilización de documentos</li>
+                            <li>Cuentas sintéticas</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h5>Tampering (Manipulación)</h5>
+                        <ul>
+                            <li>Modificación de parámetros</li>
+                            <li>Alteración de montos</li>
+                            <li>Bypass de validaciones</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h5>Repudiation (Repudio)</h5>
+                        <ul>
+                            <li>Negación de solicitudes</li>
+                            <li>Falta de auditoría</li>
+                            <li>Logs insuficientes</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h5>Information Disclosure</h5>
+                        <ul>
+                            <li>Exposición de datos PII</li>
+                            <li>Mensajes de error detallados</li>
+                            <li>Información crediticia</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h5>Denial of Service</h5>
+                        <ul>
+                            <li>Flood de solicitudes</li>
+                            <li>Agotamiento de recursos</li>
+                            <li>Bloqueo de procesos</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h5>Elevation of Privilege</h5>
+                        <ul>
+                            <li>Acceso a funciones admin</li>
+                            <li>Bypass de controles</li>
+                            <li>Escalación de permisos</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="vulnerability-list">
+                <h4>🚨 Casos de Ataque Identificados:</h4>
+                <div class="vulnerability-item">
+                    <strong>Ataque 1: Fraude de Identidad</strong>
+                    <p>Un atacante usa información pública (redes sociales) para responder preguntas de seguridad y solicitar préstamos con identidad falsa.</p>
+                </div>
+                <div class="vulnerability-item">
+                    <strong>Ataque 2: Manipulación de Parámetros</strong>
+                    <p>Modificación de JavaScript para cambiar límites de monto y obtener préstamos superiores al permitido.</p>
+                </div>
+                <div class="vulnerability-item">
+                    <strong>Ataque 3: Flood de Solicitudes</strong>
+                    <p>Envío masivo de solicitudes para agotar recursos y potencialmente obtener aprobaciones erróneas.</p>
+                </div>
+                <div class="vulnerability-item">
+                    <strong>Ataque 4: Ingeniería Social</strong>
+                    <p>Uso de información expuesta en mensajes de error para obtener datos de otros usuarios.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="container">
+        <h3>📊 Simulador de Ataques</h3>
+        <div class="form-section">
+            <h4>Prueba los Controles de Seguridad</h4>
+            <div class="form-group">
+                <label>Tipo de Ataque:</label>
+                <select id="attackType">
+                    <option value="parameter">Manipulación de Parámetros</option>
+                    <option value="flood">Flood de Solicitudes</option>
+                    <option value="identity">Suplantación de Identidad</option>
+                    <option value="privilege">Escalación de Privilegios</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Payload del Ataque:</label>
+                <textarea id="attackPayload" rows="4" placeholder="Ingresa el payload del ataque..."></textarea>
+            </div>
+            <button onclick="simulateAttack()" class="danger-btn">Simular Ataque</button>
+            <button onclick="showMitigation()">Ver Mitigación</button>
+        </div>
+        <div id="attackResult" class="alert" style="display: none;"></div>
+    </div>
+
+    <div class="container">
+        <h3>🎓 Ejercicios de Aprendizaje</h3>
+        
+        <div class="form-section">
+            <h4>Ejercicio 1: Identificación de Vulnerabilidades</h4>
+            <p>Examina el siguiente código y marca las vulnerabilidades que encuentres:</p>
+            
+            <div class="code-block">
+// Función de login vulnerable
+function login(username, password) {
+    if (username === "admin" && password === "123456") {
+        localStorage.setItem("role", "admin");
+        return true;
+    } else if (users[username] && users[username].password === password) {
+        localStorage.setItem("role", "user");
+        return true;
+    }
+    return false;
+}
+
+// Función de transferencia vulnerable  
+function transfer(fromAccount, toAccount, amount) {
+    if (localStorage.getItem("role") === "user") {
+        if (accounts[fromAccount].balance >= amount) {
+            accounts[fromAccount].balance -= amount;
+            accounts[toAccount].balance += amount;
+            return "Transfer successful";
+        }
+    }
+    return "Transfer failed";
+}
+            </div>
+            
+            <div class="form-group">
+                <input type="checkbox" id="vuln1"> <label for="vuln1">Credenciales hardcodeadas</label><br>
+                <input type="checkbox" id="vuln2"> <label for="vuln2">Almacenamiento inseguro en localStorage</label><br>
+                <input type="checkbox" id="vuln3"> <label for="vuln3">Falta de validación de entrada</label><br>
+                <input type="checkbox" id="vuln4"> <label for="vuln4">Control de acceso basado en cliente</label><br>
+                <input type="checkbox" id="vuln5"> <label for="vuln5">Ausencia de logging/auditoría</label><br>
+            </div>
+            <button onclick="checkVulnerabilities()">Verificar Respuestas</button>
+            <div id="vulnResult" style="margin-top: 10px;"></div>
+        </div>
+        
+        <div class="threat-analysis">
+            <h4>💡 Puntos Clave para Recordar</h4>
+            <ul>
+                <li><strong>Diseño vs Implementación:</strong> Un diseño inseguro no se puede "arreglar" con código perfecto</li>
+                <li><strong>Threat Modeling:</strong> Identificar amenazas desde la fase de diseño</li>
+                <li><strong>Defensa en Profundidad:</strong> Múltiples capas de controles de seguridad</li>
+                <li><strong>Principio de Menor Privilegio:</strong> Dar solo los permisos mínimos necesarios</li>
+                <li><strong>Validación Multicapa:</strong> Nunca confiar solo en validaciones del frontend</li>
+                <li><strong>Secure by Design:</strong> La seguridad debe ser intrínseca, no un agregado</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        // Funciones principales de navegación
+        function showTab(tabName) {
+            // Ocultar todos los contenidos de tabs
+            const tabs = document.querySelectorAll('.tab-content');
+            tabs.forEach(tab => tab.classList.remove('active'));
+            
+            // Desactivar todos los botones de tabs
+            const tabButtons = document.querySelectorAll('.tab');
+            tabButtons.forEach(button => button.classList.remove('active'));
+            
+            // Activar el tab seleccionado
+            document.getElementById(tabName).classList.add('active');
+            
+            // Activar el botón correspondiente
+            const clickedButton = Array.from(tabButtons).find(btn => 
+                btn.textContent.includes(getTabDisplayName(tabName))
+            );
+            if (clickedButton) {
+                clickedButton.classList.add('active');
+            }
+        }
+        
+        function getTabDisplayName(tabName) {
+            const names = {
+                'scenario': 'Escenario',
+                'vulnerable': 'Diseño Vulnerable',
+                'secure': 'Diseño Seguro',
+                'analysis': 'Análisis de Amenazas'
+            };
+            return names[tabName];
+        }
+        
+        // Funciones de formularios
+        function submitVulnerableForm() {
+            const amount = document.getElementById('amount').value;
+            const income = document.getElementById('income').value;
+            const petName = document.getElementById('petName').value;
+            
+            if (!amount || !income) {
+                alert('Por favor completa todos los campos');
+                return;
+            }
+            
+            // ❌ Validación solo en frontend - fácil de bypasear
+            if (amount > 50000) {
+                alert('Monto máximo permitido: $50,000');
+                return;
+            }
+            
+            // ❌ Lógica de aprobación insegura
+            if (amount <= 5000 && income >= 2000) {
+                alert('✅ ¡Préstamo PRE-APROBADO! Recibirás los fondos en 24 horas.');
+                console.log('Datos enviados:', { amount, income, petName, autoApproved: true });
+            } else {
+                alert('📋 Tu solicitud requiere revisión manual. Te contactaremos pronto.');
+            }
+            
+            // Mostrar vulnerabilidades detectadas
+            setTimeout(() => {
+                showVulnerabilityAlert();
+            }, 2000);
+        }
+        
+        function submitSecureForm() {
+            const amount = document.getElementById('secureAmount').value;
+            const income = document.getElementById('secureIncome').value;
+            const idDoc = document.getElementById('idDocument').files[0];
+            const incomeProof = document.getElementById('incomeProof').files[0];
+            
+            if (!amount || !income) {
+                alert('Por favor completa todos los campos requeridos');
+                return;
+            }
+            
+            if (!idDoc || !incomeProof) {
+                alert('Debes cargar los documentos requeridos');
+                return;
+            }
+            
+            alert('🔐 Procesando solicitud de forma segura...');
+            
+            setTimeout(() => {
+                alert('📧 Hemos enviado un código de verificación a tu email/SMS.\n\n' +
+                      '🔍 Tu solicitud será evaluada con múltiples verificaciones:\n' +
+                      '• Verificación de identidad biométrica\n' +
+                      '• Análisis de documentos con IA\n' +
+                      '• Verificación de ingresos con terceros\n' +
+                      '• Evaluación crediticia completa\n\n' +
+                      '⏱️ Recibirás una respuesta en 2-4 horas hábiles.');
+            }, 1500);
+        }
+        
+        function showVulnerabilityAlert() {
+            const alertDiv = document.createElement('div');
+            alertDiv.className = 'alert alert-danger';
+            alertDiv.innerHTML = `
+                <h4>🚨 VULNERABILIDADES DETECTADAS EN EL FORMULARIO:</h4>
+                <ul>
+                    <li><strong>Preguntas de seguridad inseguras:</strong> La pregunta sobre mascotas es fácilmente descifrable</li>
+                    <li><strong>Validación solo en cliente:</strong> Los límites pueden ser manipulados</li>
+                    <li><strong>Aprobación automática riesgosa:</strong> Sin verificación real de identidad</li>
+                    <li><strong>Falta de rate limiting:</strong> Posible para enviar múltiples solicitudes</li>
+                </ul>
+                <p><em>En un sistema real, estas vulnerabilidades podrían resultar en pérdidas millonarias.</em></p>
+            `;
+            
+            const vulnerableSection = document.querySelector('.vulnerable-section');
+            vulnerableSection.appendChild(alertDiv);
+        }
+        
+        // Funciones del simulador de ataques
+        function simulateAttack() {
+            const attackType = document.getElementById('attackType').value;
+            const payload = document.getElementById('attackPayload').value;
+            const resultDiv = document.getElementById('attackResult');
+            
+            let result = '';
+            let alertClass = 'alert-danger';
+            
+            switch(attackType) {
+                case 'parameter':
+                    result = `
+                        <h4>🎯 Ataque de Manipulación de Parámetros</h4>
+                        <p><strong>Payload:</strong> ${payload || 'amount=999999&bypass=true'}</p>
+                        <p><strong>Resultado:</strong> ❌ ATAQUE EXITOSO - Límites de monto bypasseados</p>
+                        <p><strong>Impacto:</strong> El atacante podría solicitar préstamos por montos superiores al límite establecido.</p>
+                        <p><strong>Datos comprometidos:</strong> Sistema financiero, límites de crédito</p>
+                    `;
+                    break;
+                    
+                case 'flood':
+                    result = `
+                        <h4>🌊 Ataque de Flood de Solicitudes</h4>
+                        <p><strong>Payload:</strong> ${payload || 'for(i=0;i<1000;i++) { submitLoan(); }'}</p>
+                        <p><strong>Resultado:</strong> ❌ ATAQUE EXITOSO - 1000 solicitudes enviadas en 30 segundos</p>
+                        <p><strong>Impacto:</strong> Sobrecarga del sistema, posible aprobación de múltiples préstamos</p>
+                        <p><strong>Recursos afectados:</strong> CPU, memoria, base de datos</p>
+                    `;
+                    break;
+                    
+                case 'identity':
+                    result = `
+                        <h4>👤 Ataque de Suplantación de Identidad</h4>
+                        <p><strong>Payload:</strong> ${payload || 'petName=Firulais&birthCity=Lima (datos obtenidos de RRSS)'}</p>
+                        <p><strong>Resultado:</strong> ❌ ATAQUE EXITOSO - Identidad suplantada usando preguntas de seguridad</p>
+                        <p><strong>Impacto:</strong> Préstamos fraudulentos a nombre de terceros</p>
+                        <p><strong>Información comprometida:</strong> Datos personales, historial crediticio</p>
+                    `;
+                    break;
+                    
+                case 'privilege':
+                    result = `
+                        <h4>🔓 Ataque de Escalación de Privilegios</h4>
+                        <p><strong>Payload:</strong> ${payload || 'role=admin&approve_all=true'}</p>
+                        <p><strong>Resultado:</strong> ❌ ATAQUE EXITOSO - Acceso a funciones administrativas</p>
+                        <p><strong>Impacto:</strong> Aprobación masiva de préstamos, acceso a datos sensibles</p>
+                        <p><strong>Privilegios obtenidos:</strong> Administrador del sistema</p>
+                    `;
+                    break;
+                    
+                default:
+                    result = '<p>Selecciona un tipo de ataque válido</p>';
+            }
+            
+            resultDiv.className = `alert ${alertClass}`;
+            resultDiv.innerHTML = result;
+            resultDiv.style.display = 'block';
+        }
+        
+        function showMitigation() {
+            const attackType = document.getElementById('attackType').value;
+            const resultDiv = document.getElementById('attackResult');
+            
+            let mitigation = '';
+            
+            switch(attackType) {
+                case 'parameter':
+                    mitigation = `
+                        <h4>🛡️ Mitigación: Validación Multicapa</h4>
+                        <p><strong>Controles implementados:</strong></p>
+                        <ul>
+                            <li>✅ Validación en API Gateway</li>
+                            <li>✅ Validación en backend con reglas de negocio</li>
+                            <li>✅ Validación en base de datos con constraints</li>
+                            <li>✅ Tokens CSRF para prevenir manipulación</li>
+                            <li>✅ Logs de auditoría para detectar intentos de bypass</li>
+                        </ul>
+                        <p><strong>Resultado:</strong> ✅ ATAQUE BLOQUEADO - Parámetros validados en todas las capas</p>
+                    `;
+                    break;
+                    
+                case 'flood':
+                    mitigation = `
+                        <h4>🛡️ Mitigación: Rate Limiting y Throttling</h4>
+                        <p><strong>Controles implementados:</strong></p>
+                        <ul>
+                            <li>✅ Rate limiting: máximo 3 solicitudes por hora por usuario</li>
+                            <li>✅ IP throttling: máximo 10 solicitudes por IP por día</li>
+                            <li>✅ CAPTCHA después de 2 intentos</li>
+                            <li>✅ Análisis de comportamiento para detectar bots</li>
+                            <li>✅ Queue system para manejar picos de carga</li>
+                        </ul>
+                        <p><strong>Resultado:</strong> ✅ ATAQUE BLOQUEADO - Solicitudes limitadas y monitoreadas</p>
+                    `;
+                    break;
+                    
+                case 'identity':
+                    mitigation = `
+                        <h4>🛡️ Mitigación: Verificación de Identidad Robusta</h4>
+                        <p><strong>Controles implementados:</strong></p>
+                        <ul>
+                            <li>✅ Autenticación multifactor (SMS + Email)</li>
+                            <li>✅ Verificación biométrica con selfie + documento</li>
+                            <li>✅ Validación de documentos con IA</li>
+                            <li>✅ Verificación cruzada con bases de datos oficiales</li>
+                            <li>✅ Eliminación de preguntas de seguridad tradicionales</li>
+                        </ul>
+                        <p><strong>Resultado:</strong> ✅ ATAQUE BLOQUEADO - Identidad verificada con múltiples factores</p>
+                    `;
+                    break;
+                    
+                case 'privilege':
+                    mitigation = `
+                        <h4>🛡️ Mitigación: Controles de Acceso Estrictos</h4>
+                        <p><strong>Controles implementados:</strong></p>
+                        <ul>
+                            <li>✅ Principio de menor privilegio</li>
+                            <li>✅ Separación de funciones (segregation of duties)</li>
+                            <li>✅ Autorización basada en roles (RBAC)</li>
+                            <li>✅ Tokens JWT con expiración corta</li>
+                            <li>✅ Monitoreo de actividades privilegiadas</li>
+                        </ul>
+                        <p><strong>Resultado:</strong> ✅ ATAQUE BLOQUEADO - Acceso denegado, alerta generada</p>
+                    `;
+                    break;
+            }
+            
+            resultDiv.className = 'alert alert-success';
+            resultDiv.innerHTML = mitigation;
+            resultDiv.style.display = 'block';
+        }
+        
+        // Funciones del ejercicio de vulnerabilidades
+        function checkVulnerabilities() {
+            const answers = {
+                vuln1: document.getElementById('vuln1').checked,
+                vuln2: document.getElementById('vuln2').checked,
+                vuln3: document.getElementById('vuln3').checked,
+                vuln4: document.getElementById('vuln4').checked,
+                vuln5: document.getElementById('vuln5').checked
+            };
+            
+            const correct = {
+                vuln1: true,  // Credenciales hardcodeadas
+                vuln2: true,  // Almacenamiento inseguro
+                vuln3: true,  // Falta de validación
+                vuln4: true,  // Control basado en cliente
+                vuln5: true   // Ausencia de logging
+            };
+            
+            let score = 0;
+            let total = Object.keys(correct).length;
+            let feedback = '<h4>📊 Resultados:</h4><ul>';
+            
+            for (let key in correct) {
+                if (answers[key] === correct[key]) {
+                    score++;
+                    feedback += `<li style="color: green;">✅ ${getVulnDescription(key)} - Correcto</li>`;
+                } else if (answers[key] && !correct[key]) {
+                    feedback += `<li style="color: red;">❌ ${getVulnDescription(key)} - Falso positivo</li>`;
+                } else {
+                    feedback += `<li style="color: red;">❌ ${getVulnDescription(key)} - No identificado</li>`;
+                }
+            }
+            
+            feedback += '</ul>';
+            feedback += `<p><strong>Puntuación: ${score}/${total} (${Math.round(score/total*100)}%)</strong></p>`;
+            
+            if (score === total) {
+                feedback += '<p style="color: green;">🎉 ¡Excelente! Has identificado todas las vulnerabilidades.</p>';
+            } else if (score >= total * 0.7) {
+                feedback += '<p style="color: orange;">👍 Buen trabajo. Revisa las vulnerabilidades no identificadas.</p>';
+            } else {
+                feedback += '<p style="color: red;">📚 Necesitas estudiar más sobre diseño seguro. Revisa los conceptos.</p>';
+            }
+            
+            document.getElementById('vulnResult').innerHTML = feedback;
+        }
+        
+        function getVulnDescription(key) {
+            const descriptions = {
+                vuln1: 'Credenciales hardcodeadas (admin/123456)',
+                vuln2: 'Almacenamiento inseguro en localStorage',
+                vuln3: 'Falta de validación de entrada',
+                vuln4: 'Control de acceso basado en cliente',
+                vuln5: 'Ausencia de logging/auditoría'
+            };
+            return descriptions[key];
+        }
+        
+        // Inicialización cuando se carga la página
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🏦 Sistema de Préstamos - Ejemplo Didáctico Cargado');
+            console.log('📚 Este ejemplo demuestra vulnerabilidades de Insecure Design del OWASP Top 10');
+            
+            // Asegurar que el primer tab esté activo
+            showTab('scenario');
+        });
+    </script>
+</body>
+</html>

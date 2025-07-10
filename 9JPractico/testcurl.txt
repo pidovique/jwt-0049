@@ -1,0 +1,17 @@
+1. Registrar un usuario admin
+bashcurl -X POST http://localhost:5000/api/register \
+  -H "Content-Type: application/json" \
+  -d '{"username": "admin", "email": "admin@test.com", "password": "admin123", "role": "admin"}'
+2. Registrar un usuario normal
+bashcurl -X POST http://localhost:5000/api/register \
+  -H "Content-Type: application/json" \
+  -d '{"username": "user1", "email": "user1@test.com", "password": "user123"}'
+3. Hacer login como admin
+bashcurl -X POST http://localhost:5000/api/login \
+  -H "Content-Type: application/json" \
+  -d '{"username": "admin", "password": "admin123"}'
+4. Eliminar usuario (con token válido)
+bashcurl -X DELETE http://localhost:5000/api/users/2 \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN_HERE"
+5. Intentar eliminar sin token (fallará)
+bashcurl -X DELETE http://localhost:5000/api/users/2

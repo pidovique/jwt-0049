@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+
+{% block title %}Registrar Estudiante - Sistema de Estudiantes{% endblock %}
+
+{% block content %}
+<h1>➕ Registrar Nuevo Estudiante</h1>
+
+<div class="card">
+    <form onsubmit="registrarEstudiante(event)">
+        <div class="form-group">
+            <label for="nombre">Nombre:</label>
+            <input type="text" id="nombre" name="nombre" required 
+                   placeholder="Ej: María, Carlos, Ana...">
+        </div>
+        
+        <div class="form-group">
+            <label for="apellido">Apellido:</label>
+            <input type="text" id="apellido" name="apellido" required 
+                   placeholder="Ej: González, Rodríguez, López...">
+        </div>
+        
+        <div class="form-group">
+            <label for="curso">Curso:</label>
+            <select id="curso" name="curso" required>
+                <option value="">Selecciona un curso</option>
+                <option value="Algoritmos con Python">Algoritmos con Python</option>
+                <option value="Detección de Superficies Web">Detección de Superficies Web</option>
+                <option value="Estructuras de Datos">Estructuras de Datos</option>
+                <option value="Desarrollo Web">Desarrollo Web</option>
+                <option value="Machine Learning">Machine Learning</option>
+                <option value="Base de Datos">Base de Datos</option>
+                <option value="Programación Orientada a Objetos">Programación Orientada a Objetos</option>
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label for="nivel">Nivel:</label>
+            <select id="nivel" name="nivel" required>
+                <option value="">Selecciona un nivel</option>
+                <option value="L1">L1 - Básico</option>
+                <option value="L2">L2 - Intermedio Bajo</option>
+                <option value="L3">L3 - Intermedio</option>
+                <option value="L4">L4 - Intermedio Alto</option>
+                <option value="L5">L5 - Avanzado</option>
+            </select>
+        </div>
+        
+        <button type="submit" class="btn">✅ Registrar Estudiante</button>
+        <button type="reset" class="btn" style="background: #6c757d; margin-left: 10px;">🔄 Limpiar Formulario</button>
+    </form>
+</div>
+
+<div class="card">
+    <h3>💡 Información sobre los Niveles</h3>
+    <ul>
+        <li><strong>L1 - Básico:</strong> Conceptos fundamentales de programación</li>
+        <li><strong>L2 - Intermedio Bajo:</strong> Estructuras de control y funciones</li>
+        <li><strong>L3 - Intermedio:</strong> Programación orientada a objetos</li>
+        <li><strong>L4 - Intermedio Alto:</strong> Algoritmos avanzados y estructuras de datos</li>
+        <li><strong>L5 - Avanzado:</strong> Proyectos complejos y especialización</li>
+    </ul>
+</div>
+
+<script>
+async function registrarEstudiante(event) {
+    event.preventDefault();
+    
+    const formData = new FormData(event.target);
+    const data = {
+        nombre: formData.get('nombre').trim(),
+        apellido: formData.get('apellido').trim(),
+        curso: formData.get('curso'),
+        nivel: formData.get('nivel')
+    };
+    
+    // Validaciones adicionales
+    if (!data.nombre || !data.apellido) {
+        showAlert('❌ Por favor completa el nombre y apellido', 'error');
+        return;
+    }
+    
+    if (data.nombre.length < 2 || data.apellido.length < 2) {
+        showAlert('❌ El nombre y apellido deben tener al menos 2 caracteres', 'error');
+        return;
+    }
+    
+    try {
+        const response = await fetch('/api/registrar', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(data)
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showAlert('✅ Estudiante registrado exitosamente!', 'success');
+            event.target.reset();
+            
+            // Mostrar información del estudiante registrado
+            setTimeout(() => {
+                showAlert(`📝 Estudiante registrado: ${result.estudiante.nombre} ${result.estudiante.apellido} (ID: ${result.estudiante.id})`, 'success');
+            }, 1000);
+        } else {
+            showAlert('❌ ' + result.message, 'error');
+        }
+    } catch (error) {
+        showAlert('❌ Error al registrar estudiante. Verifica tu conexión.', 'error');
+        console.error('Error:', error);
+    }
+}
+</script>
+{% endblock %}

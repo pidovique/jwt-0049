@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block title %}Inicio - Sistema de Estudiantes{% endblock %}
+
+{% block content %}
+<h1>📚 Sistema de Registro y Consulta de Estudiantes</h1>
+<p>Bienvenido al sistema de gestión académica. Aquí puedes registrar nuevos estudiantes, consultarlos y ver estadísticas.</p>
+
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-number">{{ stats.total_estudiantes }}</div>
+        <div>Total Estudiantes</div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-number">{{ stats.por_curso|length }}</div>
+        <div>Cursos Diferentes</div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-number">{{ stats.por_nivel|length }}</div>
+        <div>Niveles Diferentes</div>
+    </div>
+</div>
+
+<div class="card">
+    <h3>📊 Distribución por Cursos</h3>
+    {% if stats.por_curso %}
+        {% for curso, cantidad in stats.por_curso.items() %}
+        <div style="margin: 10px 0; padding: 10px; background: #f8f9fa; border-radius: 6px;">
+            <strong>{{ curso }}:</strong> {{ cantidad }} estudiante{{ 's' if cantidad != 1 else '' }}
+        </div>
+        {% endfor %}
+    {% else %}
+        <p>No hay cursos registrados aún.</p>
+    {% endif %}
+</div>
+
+<div class="card">
+    <h3>🎯 Distribución por Niveles</h3>
+    {% if stats.por_nivel %}
+        {% for nivel, cantidad in stats.por_nivel.items() %}
+        <div style="margin: 10px 0; padding: 10px; background: #f8f9fa; border-radius: 6px;">
+            <strong>{{ nivel }}:</strong> {{ cantidad }} estudiante{{ 's' if cantidad != 1 else '' }}
+        </div>
+        {% endfor %}
+    {% else %}
+        <p>No hay niveles registrados aún.</p>
+    {% endif %}
+</div>
+
+<div class="card">
+    <h3>🚀 Acciones Rápidas</h3>
+    <a href="/registro" class="btn">➕ Registrar Nuevo Estudiante</a>
+    <a href="/consulta" class="btn">🔍 Buscar Estudiantes</a>
+    <a href="/listar" class="btn">📋 Ver Todos los Estudiantes</a>
+</div>
+{% endblock %}

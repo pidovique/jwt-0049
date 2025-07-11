@@ -1,0 +1,266 @@
+{% extends "base.html" %}
+
+{% block title %}Consultar Estudiantes - Sistema de Estudiantes{% endblock %}
+
+{% block content %}
+<h1>🔍 Consultar Estudiantes</h1>
+
+<div class="card">
+    <h3>🆔 Buscar por ID</h3>
+    <div class="search-container">
+        <div class="form-group">
+            <label for="buscar-id">ID del Estudiante:</label>
+            <input type="number" id="buscar-id" placeholder="Ej: 1, 2, 3..." min="1">
+        </div>
+        <button class="btn" onclick="consultarEstudiantes('id', document.getElementById('buscar-id').value)">
+            🔍 Buscar
+        </button>
+    </div>
+</div>
+
+<div class="card">
+    <h3>👤 Buscar por Nombre</h3>
+    <div class="search-container">
+        <div class="form-group">
+            <label for="buscar-nombre">Nombre del Estudiante:</label>
+            <input type="text" id="buscar-nombre" placeholder="Ej: María, Carlos..." 
+                   onkeypress="if(event.key==='Enter') consultarEstudiantes('nombre', this.value)">
+        </div>
+        <button class="btn" onclick="consultarEstudiantes('nombre', document.getElementById('buscar-nombre').value)">
+            🔍 Buscar
+        </button>
+    </div>
+</div>
+
+<div class="card">
+    <h3>📚 Buscar por Curso</h3>
+    <div class="search-container">
+        <div class="form-group">
+            <label for="buscar-curso">Curso:</label>
+            <select id="buscar-curso">
+                <option value="">Selecciona un curso</option>
+                <option value="Algoritmos">Algoritmos con Python</option>
+                <option value="Detección">Detección de Superficies Web</option>
+                <option value="Estructuras">Estructuras de Datos</option>
+                <option value="Desarrollo">Desarrollo Web</option>
+                <option value="Machine">Machine Learning</option>
+                <option value="Base">Base de Datos</option>
+                <option value="Programación">Programación Orientada a Objetos</option>
+            </select>
+        </div>
+        <button class="btn" onclick="consultarEstudiantes('curso', document.getElementById('buscar-curso').value)">
+            🔍 Buscar
+        </button>
+    </div>
+</div>
+
+<div class="card">
+    <h3>🎯 Buscar por Nivel</h3>
+    <div class="search-container">
+        <div class="form-group">
+            <label for="buscar-nivel">Nivel:</label>
+            <select id="buscar-nivel">
+                <option value="">Selecciona un nivel</option>
+                <option value="L1">L1 - Básico</option>
+                <option value="L2">L2 - Intermedio Bajo</option>
+                <option value="L3">L3 - Intermedio</option>
+                <option value="L4">L4 - Intermedio Alto</option>
+                <option value="L5">L5 - Avanzado</option>
+            </select>
+        </div>
+        <button class="btn" onclick="consultarEstudiantes('nivel', document.getElementById('buscar-nivel').value)">
+            🔍 Buscar
+        </button>
+    </div>
+</div>
+
+<div class="card">
+    <h3>🔧 Búsqueda Rápida</h3>
+    <button class="btn" onclick="mostrarTodos()" style="background: #28a745;">
+        📋 Mostrar Todos los Estudiantes
+    </button>
+    <button class="btn" onclick="limpiarResultados()" style="background: #6c757d; margin-left: 10px;">
+        🗑️ Limpiar Resultados
+    </button>
+</div>
+
+<div class="results-container">
+    <div id="results"></div>
+</div>
+
+<script>
+async function consultarEstudiantes(tipo, valor) {
+    if (!valor || !valor.toString().trim()) {
+        showAlert('⚠️ Por favor ingresa un valor para buscar', 'error');
+        return;
+    }
+    
+    // Mostrar indicador de carga
+    const resultsContainer = document.getElementById('results');
+    resultsContainer.innerHTML = '<div class="card"><p>🔄 Buscando...</p></div>';
+    
+    try {
+        const response = await fetch(`/api/consultar/${tipo}/${encodeURIComponent(valor.toString().trim())}`);
+        const result = await response.json();
+        
+        resultsContainer.innerHTML = '';
+        
+        if (result.success && result.estudiantes.length > 0) {
+            const title = document.createElement('h3');
+            title.textContent = `📊 Resultados encontrados: ${result.estudiantes.length}`;
+            title.style.color = '#28a745';
+            resultsContainer.appendChild(title);
+            
+            result.estudiantes.forEach(estudiante => {
+                const card = document.createElement('div');
+                card.className = 'student-card';
+                card.innerHTML = `
+                    <div style="display: flex; justify-content: space-between; align-items: start;">
+                        <div>
+                            <h4>👤 ${estudiante.nombre} ${estudiante.apellido}</h4>
+                            <p><strong>🆔 ID:</strong> ${estudiante.id}</p>
+                            <p><strong>📚 Curso:</strong> ${estudiante.curso}</p>
+                            <p><strong>🎯 Nivel:</strong> ${estudiante.nivel}</p>
+                            <p><strong>📅 Fecha de Registro:</strong> ${estudiante.fecha_registro}</p>
+                        </div>
+                        <div>
+                            <button class="btn btn-danger" onclick="eliminarEstudiante(${estudiante.id})" 
+                                    style="margin-top: 10px;">
+                                🗑️ Eliminar
+                            </button>
+                        </div>
+                    </div>
+                `;
+                resultsContainer.appendChild(card);
+            });
+            
+            showAlert(`✅ Se encontraron ${result.estudiantes.length} estudiante(s)`, 'success');
+        } else {
+            resultsContainer.innerHTML = `
+                <div class="card">
+                    <p style="text-align: center; color: #6c757d;">
+                        ❌ No se encontraron estudiantes con los criterios especificados.
+                    </p>
+                    <p style="text-align: center;">
+                        <strong>Sugerencias:</strong><br>
+                        • Verifica la ortografía<br>
+                        • Intenta con términos más generales<br>
+                        • Usa la búsqueda por nombre con solo una parte del nombre
+                    </p>
+                </div>
+            `;
+        }
+    } catch (error) {
+        resultsContainer.innerHTML = '<div class="card"><p style="color: #dc3545;">❌ Error al consultar estudiantes</p></div>';
+        showAlert('❌ Error al consultar estudiantes', 'error');
+        console.error('Error:', error);
+    }
+}
+
+async function mostrarTodos() {
+    try {
+        const response = await fetch('/api/todos');
+        const result = await response.json();
+        
+        const resultsContainer = document.getElementById('results');
+        resultsContainer.innerHTML = '';
+        
+        if (result.success && result.estudiantes.length > 0) {
+            const title = document.createElement('h3');
+            title.textContent = `📋 Todos los estudiantes (${result.estudiantes.length})`;
+            title.style.color = '#007bff';
+            resultsContainer.appendChild(title);
+            
+            result.estudiantes.forEach(estudiante => {
+                const card = document.createElement('div');
+                card.className = 'student-card';
+                card.innerHTML = `
+                    <div style="display: flex; justify-content: space-between; align-items: start;">
+                        <div>
+                            <h4>👤 ${estudiante.nombre} ${estudiante.apellido}</h4>
+                            <p><strong>🆔 ID:</strong> ${estudiante.id}</p>
+                            <p><strong>📚 Curso:</strong> ${estudiante.curso}</p>
+                            <p><strong>🎯 Nivel:</strong> ${estudiante.nivel}</p>
+                            <p><strong>📅 Fecha de Registro:</strong> ${estudiante.fecha_registro}</p>
+                        </div>
+                        <div>
+                            <button class="btn btn-danger" onclick="eliminarEstudiante(${estudiante.id})" 
+                                    style="margin-top: 10px;">
+                                🗑️ Eliminar
+                            </button>
+                        </div>
+                    </div>
+                `;
+                resultsContainer.appendChild(card);
+            });
+        } else {
+            resultsContainer.innerHTML = `
+                <div class="card">
+                    <p style="text-align: center;">📝 No hay estudiantes registrados en el sistema.</p>
+                    <div style="text-align: center; margin-top: 20px;">
+                        <a href="/registro" class="btn">➕ Registrar primer estudiante</a>
+                    </div>
+                </div>
+            `;
+        }
+    } catch (error) {
+        showAlert('❌ Error al obtener la lista de estudiantes', 'error');
+        console.error('Error:', error);
+    }
+}
+
+function limpiarResultados() {
+    document.getElementById('results').innerHTML = '';
+    document.getElementById('buscar-id').value = '';
+    document.getElementById('buscar-nombre').value = '';
+    document.getElementById('buscar-curso').value = '';
+    document.getElementById('buscar-nivel').value = '';
+    showAlert('🧹 Resultados limpiados', 'success');
+}
+
+async function eliminarEstudiante(id) {
+    if (!confirm('¿Estás seguro de que deseas eliminar este estudiante?\n\nEsta acción no se puede deshacer.')) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/api/eliminar/${id}`, {
+            method: 'DELETE'
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showAlert('✅ Estudiante eliminado exitosamente!', 'success');
+            // Remover la tarjeta del estudiante eliminado
+            const cards = document.querySelectorAll('.student-card');
+            cards.forEach(card => {
+                if (card.innerHTML.includes(`ID:</strong> ${id}`)) {
+                    card.remove();
+                }
+            });
+            
+            // Actualizar contador si existe
+            const title = document.querySelector('#results h3');
+            if (title) {
+                const currentCount = parseInt(title.textContent.match(/\d+/)[0]) - 1;
+                if (currentCount > 0) {
+                    title.textContent = title.textContent.replace(/\d+/, currentCount);
+                } else {
+                    document.getElementById('results').innerHTML = `
+                        <div class="card">
+                            <p style="text-align: center;">📝 No quedan más estudiantes con estos criterios.</p>
+                        </div>
+                    `;
+                }
+            }
+        } else {
+            showAlert('❌ ' + result.message, 'error');
+        }
+    } catch (error) {
+        showAlert('❌ Error al eliminar estudiante', 'error');
+        console.error('Error:', error);
+    }
+}
+</script>
+{% endblock %}

@@ -1,0 +1,359 @@
+{% extends "base.html" %}
+
+{% block title %}Lista de Estudiantes - Sistema de Estudiantes{% endblock %}
+
+{% block content %}
+<h1>📋 Lista de Todos los Estudiantes</h1>
+
+<div class="card">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <p>Total de estudiantes registrados: <strong style="color: #007bff;">{{ estudiantes|length }}</strong></p>
+        <div>
+            <a href="/registro" class="btn">➕ Agregar Estudiante</a>
+            <button class="btn" onclick="exportarCSV()" style="background: #28a745; margin-left: 10px;">
+                📥 Exportar CSV
+            </button>
+        </div>
+    </div>
+    
+    {% if estudiantes %}
+    <!-- Filtros -->
+    <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+        <h4>🔍 Filtros</h4>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+            <div>
+                <label>Buscar por nombre:</label>
+                <input type="text" id="filtroNombre" placeholder="Nombre o apellido..." 
+                       onkeyup="filtrarTabla()" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+            </div>
+            <div>
+                <label>Filtrar por curso:</label>
+                <select id="filtroCurso" onchange="filtrarTabla()" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                    <option value="">Todos los cursos</option>
+                    {% for curso in (estudiantes | map(attribute='curso') | unique | sort) %}
+                    <option value="{{ curso }}">{{ curso }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label>Filtrar por nivel:</label>
+                <select id="filtroNivel" onchange="filtrarTabla()" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                    <option value="">Todos los niveles</option>
+                    {% for nivel in (estudiantes | map(attribute='nivel') | unique | sort) %}
+                    <option value="{{ nivel }}">{{ nivel }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div style="display: flex; align-items: end;">
+                <button class="btn" onclick="limpiarFiltros()" style="background: #6c757d;">
+                    🗑️ Limpiar Filtros
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabla de estudiantes -->
+    <div style="overflow-x: auto;">
+        <table class="table" id="tablaEstudiantes">
+            <thead>
+                <tr>
+                    <th onclick="ordenarTabla(0)" style="cursor: pointer;">
+                        🆔 ID <span id="sort-0">⭕</span>
+                    </th>
+                    <th onclick="ordenarTabla(1)" style="cursor: pointer;">
+                        👤 Nombre Completo <span id="sort-1">⭕</span>
+                    </th>
+                    <th onclick="ordenarTabla(2)" style="cursor: pointer;">
+                        📚 Curso <span id="sort-2">⭕</span>
+                    </th>
+                    <th onclick="ordenarTabla(3)" style="cursor: pointer;">
+                        🎯 Nivel <span id="sort-3">⭕</span>
+                    </th>
+                    <th onclick="ordenarTabla(4)" style="cursor: pointer;">
+                        📅 Fecha Registro <span id="sort-4">⭕</span>
+                    </th>
+                    <th>⚙️ Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for estudiante in estudiantes %}
+                <tr data-id="{{ estudiante.id_estudiante }}">
+                    <td>{{ estudiante.id_estudiante }}</td>
+                    <td>{{ estudiante.nombre }} {{ estudiante.apellido }}</td>
+                    <td>{{ estudiante.curso }}</td>
+                    <td>
+                        <span style="background: 
+                        {% if estudiante.nivel == 'L1' %}#dc3545
+                        {% elif estudiante.nivel == 'L2' %}#fd7e14
+                        {% elif estudiante.nivel == 'L3' %}#ffc107
+                        {% elif estudiante.nivel == 'L4' %}#20c997
+                        {% elif estudiante.nivel == 'L5' %}#0d6efd
+                        {% endif %}; 
+                        color: white; padding: 4px 8px; border-radius: 12px; font-size: 12px; font-weight: bold;">
+                            {{ estudiante.nivel }}
+                        </span>
+                    </td>
+                    <td>{{ estudiante.fecha_registro }}</td>
+                    <td>
+                        <button class="btn btn-danger" onclick="eliminarEstudiante({{ estudiante.id_estudiante }})" 
+                                style="font-size: 12px; padding: 6px 12px;">
+                            🗑️ Eliminar
+                        </button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Estadísticas de la tabla -->
+    <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-top: 20px;">
+        <h4>📊 Estadísticas</h4>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; text-align: center;">
+            <div>
+                <div style="font-size: 24px; font-weight: bold; color: #007bff;" id="totalVisible">{{ estudiantes|length }}</div>
+                <div>Estudiantes Visibles</div>
+            </div>
+            <div>
+                <div style="font-size: 24px; font-weight: bold; color: #28a745;">
+                    {{ estudiantes | selectattr('nivel', 'equalto', 'L5') | list | length }}
+                </div>
+                <div>Nivel Avanzado (L5)</div>
+            </div>
+            <div>
+                <div style="font-size: 24px; font-weight: bold; color: #dc3545;">
+                    {{ estudiantes | selectattr('nivel', 'equalto', 'L1') | list | length }}
+                </div>
+                <div>Nivel Básico (L1)</div>
+            </div>
+        </div>
+    </div>
+
+    {% else %}
+    <!-- Estado vacío -->
+    <div style="text-align: center; padding: 60px 20px;">
+        <div style="font-size: 4em; margin-bottom: 20px;">📝</div>
+        <h3>No hay estudiantes registrados</h3>
+        <p style="color: #6c757d; margin-bottom: 30px;">
+            Comienza agregando el primer estudiante al sistema.
+        </p>
+        <a href="/registro" class="btn" style="font-size: 16px; padding: 15px 30px;">
+            ➕ Registrar Primer Estudiante
+        </a>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+let ordenAscendente = [true, true, true, true, true]; // Para cada columna
+let datosOriginales = []; // Guardar datos originales para filtros
+
+// Inicializar datos originales al cargar la página
+document.addEventListener('DOMContentLoaded', function() {
+    const tabla = document.getElementById('tablaEstudiantes');
+    if (tabla) {
+        const filas = tabla.querySelectorAll('tbody tr');
+        datosOriginales = Array.from(filas).map(fila => ({
+            elemento: fila.cloneNode(true),
+            id: fila.dataset.id,
+            nombre: fila.cells[1].textContent.toLowerCase(),
+            curso: fila.cells[2].textContent.toLowerCase(),
+            nivel: fila.cells[3].textContent.trim()
+        }));
+    }
+});
+
+function filtrarTabla() {
+    const filtroNombre = document.getElementById('filtroNombre').value.toLowerCase();
+    const filtroCurso = document.getElementById('filtroCurso').value.toLowerCase();
+    const filtroNivel = document.getElementById('filtroNivel').value;
+
+    const tabla = document.getElementById('tablaEstudiantes');
+    if (!tabla) return;
+
+    const filas = tabla.querySelectorAll('tbody tr');
+    let visibles = 0;
+
+    filas.forEach(fila => {
+        const nombre = fila.cells[1].textContent.toLowerCase();
+        const curso = fila.cells[2].textContent.toLowerCase();
+        const nivel = fila.cells[3].textContent.trim();
+
+        const cumpleFiltros = 
+            (filtroNombre === '' || nombre.includes(filtroNombre)) &&
+            (filtroCurso === '' || curso.includes(filtroCurso)) &&
+            (filtroNivel === '' || nivel === filtroNivel);
+
+        if (cumpleFiltros) {
+            fila.style.display = '';
+            visibles++;
+        } else {
+            fila.style.display = 'none';
+        }
+    });
+
+    // Actualizar contador de visibles
+    const totalVisible = document.getElementById('totalVisible');
+    if (totalVisible) {
+        totalVisible.textContent = visibles;
+    }
+
+    // Mostrar mensaje si no hay resultados
+    if (visibles === 0 && (filtroNombre || filtroCurso || filtroNivel)) {
+        mostrarMensajeNoResultados();
+    } else {
+        ocultarMensajeNoResultados();
+    }
+}
+
+function limpiarFiltros() {
+    document.getElementById('filtroNombre').value = '';
+    document.getElementById('filtroCurso').value = '';
+    document.getElementById('filtroNivel').value = '';
+    filtrarTabla();
+    showAlert('🧹 Filtros limpiados', 'success');
+}
+
+function ordenarTabla(columna) {
+    const tabla = document.getElementById('tablaEstudiantes');
+    if (!tabla) return;
+
+    const tbody = tabla.querySelector('tbody');
+    const filas = Array.from(tbody.querySelectorAll('tr'));
+    
+    filas.sort((a, b) => {
+        let valorA = a.cells[columna].textContent.trim();
+        let valorB = b.cells[columna].textContent.trim();
+
+        // Conversión especial para ID (numérico)
+        if (columna === 0) {
+            valorA = parseInt(valorA);
+            valorB = parseInt(valorB);
+        }
+
+        if (ordenAscendente[columna]) {
+            return valorA > valorB ? 1 : -1;
+        } else {
+            return valorA < valorB ? 1 : -1;
+        }
+    });
+
+    // Limpiar tbody y agregar filas ordenadas
+    tbody.innerHTML = '';
+    filas.forEach(fila => tbody.appendChild(fila));
+
+    // Cambiar orden para próxima vez
+    ordenAscendente[columna] = !ordenAscendente[columna];
+
+    // Actualizar indicadores de ordenamiento
+    for (let i = 0; i < 5; i++) {
+        const indicador = document.getElementById(`sort-${i}`);
+        if (i === columna) {
+            indicador.textContent = ordenAscendente[columna] ? '⬇️' : '⬆️';
+        } else {
+            indicador.textContent = '⭕';
+        }
+    }
+}
+
+function mostrarMensajeNoResultados() {
+    const tabla = document.getElementById('tablaEstudiantes');
+    let mensaje = document.getElementById('mensaje-no-resultados');
+    
+    if (!mensaje) {
+        mensaje = document.createElement('div');
+        mensaje.id = 'mensaje-no-resultados';
+        mensaje.innerHTML = `
+            <div style="text-align: center; padding: 40px; background: #f8f9fa; border-radius: 8px; margin: 20px 0;">
+                <div style="font-size: 3em; margin-bottom: 15px;">🔍</div>
+                <h4>No se encontraron resultados</h4>
+                <p style="color: #6c757d;">Prueba ajustando los filtros de búsqueda.</p>
+            </div>
+        `;
+        tabla.parentNode.insertBefore(mensaje, tabla.nextSibling);
+    }
+    mensaje.style.display = 'block';
+}
+
+function ocultarMensajeNoResultados() {
+    const mensaje = document.getElementById('mensaje-no-resultados');
+    if (mensaje) {
+        mensaje.style.display = 'none';
+    }
+}
+
+async function eliminarEstudiante(id) {
+    if (!confirm('¿Estás seguro de que deseas eliminar este estudiante?\n\nEsta acción no se puede deshacer.')) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/api/eliminar/${id}`, {
+            method: 'DELETE'
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showAlert('✅ Estudiante eliminado exitosamente!', 'success');
+            
+            // Remover la fila de la tabla
+            const fila = document.querySelector(`tr[data-id="${id}"]`);
+            if (fila) {
+                fila.remove();
+                
+                // Actualizar contador
+                const tabla = document.getElementById('tablaEstudiantes');
+                const filasRestantes = tabla.querySelectorAll('tbody tr').length;
+                
+                if (filasRestantes === 0) {
+                    // Recargar página si no quedan estudiantes
+                    setTimeout(() => {
+                        location.reload();
+                    }, 1500);
+                } else {
+                    // Actualizar filtros y contadores
+                    filtrarTabla();
+                }
+            }
+        } else {
+            showAlert('❌ ' + result.message, 'error');
+        }
+    } catch (error) {
+        showAlert('❌ Error al eliminar estudiante', 'error');
+        console.error('Error:', error);
+    }
+}
+
+function exportarCSV() {
+    const tabla = document.getElementById('tablaEstudiantes');
+    if (!tabla) return;
+
+    let csv = 'ID,Nombre,Apellido,Curso,Nivel,Fecha_Registro\n';
+    
+    const filas = tabla.querySelectorAll('tbody tr');
+    filas.forEach(fila => {
+        if (fila.style.display !== 'none') { // Solo filas visibles
+            const celdas = fila.querySelectorAll('td');
+            const nombre = celdas[1].textContent.split(' ');
+            const nombreEstudiante = nombre[0];
+            const apellidoEstudiante = nombre.slice(1).join(' ');
+            
+            csv += `${celdas[0].textContent},"${nombreEstudiante}","${apellidoEstudiante}","${celdas[2].textContent}","${celdas[3].textContent.trim()}","${celdas[4].textContent}"\n`;
+        }
+    });
+
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `estudiantes_${new Date().toISOString().split('T')[0]}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+    
+    showAlert('📥 Archivo CSV descargado exitosamente', 'success');
+}
+</script>
+{% endblock %}

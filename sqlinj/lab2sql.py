@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-APLICACIÓN PARCIALMENTE SEGURA - SQL INJECTION PREVENTION
+APLICACIÓN SEMI-SEGURA - SQL INJECTION PREVENTION
 Implementa algunas medidas de seguridad básicas pero aún tiene vulnerabilidades
 
 Esta versión muestra:
@@ -13,7 +13,7 @@ Instalación:
 pip install flask
 
 Uso:
-python partially_secure_app.py
+python nombresapp.....py
 """
 
 from flask import Flask, request, render_template_string, jsonify

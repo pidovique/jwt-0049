@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+
+{% block title %}Mensajes - Lab Seguridad{% endblock %}
+
+{% block content %}
+<h1>Mensajes Públicos</h1>
+
+<div class="card">
+    <h2>Publicar Mensaje</h2>
+    <form method="POST" action="{{ url_for('post_message') }}">
+        <div class="form-group">
+            <label for="content">Mensaje:</label>
+            <textarea id="content" name="content" rows="3" required></textarea>
+        </div>
+        
+        <button type="submit" class="btn btn-primary">Publicar</button>
+    </form>
+    
+    <div class="hint">
+        <p>💡 Intenta inyectar HTML o JavaScript aquí...</p>
+    </div>
+</div>
+
+<div class="card">
+    <h2>Búsqueda</h2>
+    <form method="GET" action="{{ url_for('search') }}">
+        <div class="form-group">
+            <input type="text" name="q" placeholder="Buscar en mensajes..." 
+                   value="{{ request.args.get('q', '') }}">
+            <button type="submit" class="btn btn-secondary">Buscar</button>
+        </div>
+    </form>
+</div>
+
+<div class="messages-container">
+    <h2>Mensajes Recientes</h2>
+    
+    {% for message in messages %}
+        <div class="message">
+            <div class="message-header">
+                <strong>{{ message.author.username }}</strong>
+                <small>{{ message.created_at.strftime('%Y-%m-%d %H:%M') }}</small>
+            </div>
+            <div class="message-content">
+                <!-- VULNERABLE: Renderiza HTML sin sanitizar -->
+                {{ message.content }}
+            </div>
+        </div>
+    {% endfor %}
+</div>
+
+<div class="vulnerability-note">
+    <h3>🔓 Vulnerabilidades XSS:</h3>
+    <ul>
+        <li>Mensajes se renderizan sin sanitización</li>
+        <li>Autoescape de Jinja2 deshabilitado</li>
+        <li>Sin Content Security Policy</li>
+    </ul>
+</div>
+{% endblock %}

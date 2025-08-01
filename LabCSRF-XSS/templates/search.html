@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block title %}Búsqueda - Lab Seguridad{% endblock %}
+
+{% block content %}
+<h1>Resultados de Búsqueda</h1>
+
+{% if query %}
+    <p>Búsqueda: <strong>{{ query }}</strong></p>
+{% endif %}
+
+{% if error %}
+    <!-- VULNERABLE: XSS Reflejado -->
+    <div class="alert alert-warning">{{ error }}</div>
+{% endif %}
+
+{% if results %}
+    <div class="results">
+        <h2>Resultados encontrados:</h2>
+        {% for message in results %}
+            <div class="message">
+                <strong>{{ message.author.username }}:</strong> {{ message.content }}
+            </div>
+        {% endfor %}
+    </div>
+{% endif %}
+
+<a href="{{ url_for('messages') }}" class="btn btn-secondary">Volver a mensajes</a>
+{% endblock %}

@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+
+{% block title %}Inicio - Lab Seguridad{% endblock %}
+
+{% block content %}
+<div class="hero">
+    <h1>Laboratorio de Seguridad Web</h1>
+    <h2>CSRF y XSS </h2>
+    
+    <div class="warning">
+        <h3>⚠️ ADVERTENCIA</h3>
+        <p>Esta aplicación contiene vulnerabilidades intencionales para fines educativos.</p>
+        <p>NO utilices en producción ni expongas a Internet.</p>
+    </div>
+    
+    <div class="info-box">
+        <h3>Usuarios de Prueba:</h3>
+        <table class="users-table">
+            <tr>
+                <th>Usuario</th>
+                <th>Contraseña</th>
+                <th>Balance Inicial</th>
+            </tr>
+            <tr>
+                <td>alice</td>
+                <td>password123</td>
+                <td>$1000</td>
+            </tr>
+            <tr>
+                <td>bob</td>
+                <td>password456</td>
+                <td>$1000</td>
+            </tr>
+            <tr>
+                <td>charlie</td>
+                <td>password789</td>
+                <td>$1000</td>
+            </tr>
+        </table>
+    </div>
+    
+    <div class="actions">
+        <a href="{{ url_for('login') }}" class="btn btn-primary">Iniciar Sesión</a>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Lab Seguridad{% endblock %}
+
+{% block content %}
+<h1>Dashboard</h1>
+
+<div class="grid">
+    <div class="card">
+        <h2>Mi Información</h2>
+        <p><strong>Usuario:</strong> {{ current_user.username }}</p>
+        <p><strong>Email:</strong> {{ current_user.email }}</p>
+        <p><strong>Balance:</strong> ${{ current_user.balance }}</p>
+    </div>
+    
+    <div class="card">
+        <h2>Transferir Dinero</h2>
+        <form id="transferForm" method="POST" action="{{ url_for('transfer') }}">
+            <div class="form-group">
+                <label for="to_username">Transferir a:</label>
+                <select id="to_username" name="to_username" required>
+                    <option value="">Seleccionar usuario</option>
+                    {% for user in users %}
+                        <option value="{{ user.username }}">{{ user.username }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="amount">Cantidad:</label>
+                <input type="number" id="amount" name="amount" min="1" max="{{ current_user.balance }}" required>
+            </div>
+            
+            <button type="submit" class="btn btn-primary">Transferir</button>
+        </form>
+        
+        <div id="transferResult"></div>
+    </div>
+</div>
+
+<div class="card">
+    <h2>Actualizar Email</h2>
+    <form method="POST" action="{{ url_for('update_email') }}">
+        <div class="form-group">
+            <label for="email">Nuevo Email:</label>
+            <input type="email" id="email" name="email" value="{{ current_user.email }}" required>
+        </div>
+        
+        <button type="submit" class="btn btn-secondary">Actualizar</button>
+    </form>
+</div>
+
+<div class="vulnerability-note">
+    <h3>🔓 Vulnerabilidades en esta página:</h3>
+    <ul>
+        <li>Sin protección CSRF en formularios</li>
+        <li>Sin validación de token en transferencias</li>
+        <li>Cookies de sesión accesibles por JavaScript</li>
+    </ul>
+</div>
+
+<script>
+// Manejar transferencia con AJAX (también vulnerable)
+document.getElementById('transferForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const formData = new FormData(e.target);
+    const response = await fetch('/transfer', {
+        method: 'POST',
+        body: formData
+    });
+    
+    const result = await response.json();
+    const resultDiv = document.getElementById('transferResult');
+    
+    if (result.success) {
+        resultDiv.innerHTML = '<div class="alert alert-success">Transferencia exitosa! Nuevo balance: $' + result.new_balance + '</div>';
+        location.reload(); // Recargar para actualizar balance
+    } else {
+        resultDiv.innerHTML = '<div class="alert alert-danger">Error: ' + result.error + '</div>';
+    }
+});
+</script>
+{% endblock %}
